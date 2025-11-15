@@ -1,11 +1,15 @@
 Esse programa foi criado por iniciantedev sob licensa MIT
 
-make:
-'''
-as -g calculator.asm -o calculator.o
-ld hello.o -o hello
-./hello
-'''
+```make:
+make
+```
 
+```executar:
+./BIN/calculator
+```
 
-*Esse software esta isento de qualquer garantia!*
+## dependencias de compilação
+- make
+- binutils
+
+**Esse software esta isento de qualquer garantia!**

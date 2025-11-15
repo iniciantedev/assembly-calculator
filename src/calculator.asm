@@ -1,6 +1,13 @@
 .globl _start
 
 _start:
+	lea req0(%rip), %rax
+	call write
+
+	lea operation(%rip), %rax
+	mov $10, %rdi
+	call read
+
 	lea req1(%rip), %rax
 	call write
 	
@@ -21,15 +28,52 @@ _start:
 
 	lea input2(%rip), %rsi
 	call ascii2int
-	add %rax, %rdi
-	lea tmp(%rip), %rsi
-	call int2ascii
+	
+	lea operation(%rip), %rbx
+	movb (%rbx), %cl
+	cmpb $'+', %cl
+	je add
+	cmpb $'-', %cl
+	je sub
+	cmpb $'/', %cl
+	je div
+	cmpb $'*', %cl
+	je mult
 
-	call write
+	add:
+		add %rax, %rdi /* rdi = rdi + rax */
+		jmp end
+	sub:
+		sub %rax, %rdi /* rdi = rdi - rax */
+		jmp end
 
-	mov $60, %rax
-	mov $0, %rdi
-	syscall
+	div: /* esta operação não esta pronta, termina-la */
+		xor %rdx, %rdx
+
+		/* rax(dest) = rdi(src) rdi(src) = rax(dest) */
+		mov %rax, %rsi
+		mov %rdi, %rax
+		mov %rsi, %rdi
+
+
+		idivq %rdi /* rax = rax / rdi */
+		movq %rax, %rdi /* rdi = rax */
+		jmp end
+
+	mult:
+		imul %rax, %rdi /* rdi = rdi * rax */
+		jmp end
+
+	end:
+
+		lea tmp(%rip), %rsi
+		call int2ascii
+
+		call write
+
+		mov $60, %rax
+		mov $0, %rdi
+		syscall
 
 	/*
 	strlen:
@@ -124,11 +168,12 @@ _start:
 		ret
 
 .data
+	req0: .ascii "enter the operation (+, -, *, /): \0"
 	req1: .ascii "enter the first number: \0"
 	req2: .ascii "\nenter the second number: \0"
-	
 
 .bss
 	input1: .skip 10
 	input2: .skip 10
 	tmp: .skip 10
+	operation: .skip 10
