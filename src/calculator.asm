@@ -47,7 +47,7 @@ _start:
 		sub %rax, %rdi /* rdi = rdi - rax */
 		jmp end
 
-	div: /* esta operação não esta pronta, termina-la */
+	div:
 		xor %rdx, %rdx
 
 		/* rax(dest) = rdi(src) rdi(src) = rax(dest) */
@@ -125,16 +125,21 @@ _start:
 	in:
 	RSI = buffer + sizeof(buffer)
 	RDI = numero
-	; out:
-	; RAX = buffer
+	out:
+	RAX = buffer
 	*/
 
-	int2ascii:
+	int2ascii: /* não funciona */
+	xor %cl, %cl
 	movb $0, (%rsi)
+	dec %rsi
 	mov %rdi, %rax
-
+	test %rdi, %rdi
+	jge loop_c /* >= 0 */
+	neg %rax
+	mov $1, %cl
 	loop_c:
-		xor %dl, %dl
+		xor %rdx, %rdx
 		mov $10, %rbx
 		div %rbx
 		add $'0', %dl
@@ -142,6 +147,13 @@ _start:
 		mov %dl, (%rsi)
 		test %rax, %rax
 		jne loop_c
+	
+		/* caso negativo */
+		cmp $1, %cl
+		jne .ret
+		dec %rsi
+		movb $'-', (%rsi)
+	.ret:
 		mov %rsi, %rax
 		ret
 
@@ -154,17 +166,28 @@ _start:
 	*/
 	ascii2int:
 		xor %rax, %rax
-		c_loop:
+		mov %rsi, %rcx
+		movb (%rcx), %dl
+		cmpb $'-', %dl
+		jne c_loop
+		inc %rsi
+		movb $1, %dl
+
+	c_loop:
 		movzbl (%rsi), %ebx
 		cmpb $0, %bl
 		je .done
 		subb $'0', %bl
 		mov $10, %rcx
-		mul %rcx
+		imul $10, %rax, %rax
 		add %rbx, %rax
 		inc %rsi
 		jmp c_loop
 	.done:
+		cmpb $1, %dl
+		jne .return
+		neg %rax
+	.return:
 		ret
 
 .data
